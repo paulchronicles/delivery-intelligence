@@ -1,0 +1,35 @@
+team: SCRUM
+project_key: SCRUM
+qa_lead: olupaul485@gmail.com
+slack_channel: "#qa-general"
+target_transition_state: "In Review"
+
+definition_of_done:
+  acceptance_criteria_minimum: 3
+  designs_required: false
+  non_functional_required: false
+
+compliance_triggers:
+  - keyword: "card"
+    requirement: "Must include PCI DSS data handling AC"
+    severity: BLOCKER
+  - keyword: "card details"
+    requirement: "Must specify tokenisation — never store raw card numbers"
+    severity: BLOCKER
+  - keyword: "bank account"
+    requirement: "Must include encryption and audit logging AC"
+    severity: BLOCKER
+  - keyword: "payment"
+    requirement: "Must include PCI DSS scope confirmation"
+    severity: CRITICAL
+  - keyword: "password"
+    requirement: "Must include secure storage AC"
+    severity: CRITICAL
+  - keyword: "personal data"
+    requirement: "Must include GDPR data handling AC"
+    severity: BLOCKER
+  - keyword: "user data"
+    requirement: "Must include data retention and deletion AC"
+    severity: CRITICAL
+
+severity_overrides: {}

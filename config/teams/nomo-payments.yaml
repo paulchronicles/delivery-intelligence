@@ -1,0 +1,31 @@
+team: nomo-payments
+project_key: PAY
+qa_lead: paul@nomo.com
+slack_channel: "#qa-payments"
+target_transition_state: "Ready for Review"
+
+definition_of_done:
+  acceptance_criteria_minimum: 3
+  designs_required: true
+  non_functional_required: true
+
+compliance_triggers:
+  - keyword: "bank account"
+    requirement: "Must include data encryption AC"
+    severity: BLOCKER
+  - keyword: "user balance"
+    requirement: "Must include audit logging AC"
+    severity: BLOCKER
+  - keyword: "KYC"
+    requirement: "Must tag compliance team as reviewer"
+    severity: CRITICAL
+  - keyword: "PII"
+    requirement: "Must include GDPR data handling AC"
+    severity: BLOCKER
+  - keyword: "payment"
+    requirement: "Must include PCI-DSS scope confirmation"
+    severity: CRITICAL
+
+severity_overrides:
+  missing_designs: MAJOR
+  vague_language: MINOR
