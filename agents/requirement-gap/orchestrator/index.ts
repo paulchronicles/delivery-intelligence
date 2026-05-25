@@ -107,7 +107,7 @@ function buildFinalVerdict(
     criticals,
     readyForDev: overallVerdict === 'PASS',
     requiresHumanReview,
-    reviewedBy: 'QA Gate Agent v1.0',
+    reviewedBy: 'Requirement Intelligence Agent v1.0',
     reviewedAt: new Date().toISOString(),
     totalDurationMs,
   }

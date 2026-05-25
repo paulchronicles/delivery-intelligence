@@ -160,3 +160,21 @@ export interface GlobalConfig {
     timeoutSeconds: number
   }
 }
+
+// ─── Readiness Levels ─────────────────────────────────────────
+
+export type ReadinessLevel = 'NOT_READY' | 'NEEDS_WORK' | 'NEARLY_READY' | 'READY'
+
+export const READINESS_LABEL: Record<ReadinessLevel, string> = {
+  NOT_READY:    '🔴 NOT READY — has blockers, cannot be built safely',
+  NEEDS_WORK:   '🟠 NEEDS WORK — has criticals, will cause mid-sprint problems',
+  NEARLY_READY: '🟡 NEARLY READY — minor gaps, can proceed with caution',
+  READY:        '✅ READY — meets quality bar, clear to develop',
+}
+
+export function getReadinessLevel(blockers: number, criticals: number, majors: number): ReadinessLevel {
+  if (blockers > 0) return 'NOT_READY'
+  if (criticals > 0) return 'NEEDS_WORK'
+  if (majors > 0) return 'NEARLY_READY'
+  return 'READY'
+}
