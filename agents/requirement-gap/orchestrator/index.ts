@@ -41,16 +41,16 @@ export async function runOrchestrator(ticket: NormalisedTicket): Promise<FinalVe
 
   // Run parallel agents with timeout protection
   const [clarityResult, testabilityResult, completenessResult] = await Promise.all([
-    withTimeout(agents.clarity.analyse(ticket), globalConfig.webhook.timeoutSeconds * 1000 - 2000),
-    withTimeout(agents.testability.analyse(ticket), globalConfig.webhook.timeoutSeconds * 1000 - 2000),
-    withTimeout(agents.completeness.analyse(ticket), globalConfig.webhook.timeoutSeconds * 1000 - 2000),
+    withTimeout(agents.clarity.analyse(ticket), 55000),
+    withTimeout(agents.testability.analyse(ticket), 55000),
+    withTimeout(agents.completeness.analyse(ticket), 55000),
   ])
 
   // Compliance runs after parallel agents — it benefits from knowing
   // what other agents found (logged context) and is higher risk to get wrong
   const complianceResult = await withTimeout(
     agents.compliance.analyse(ticket),
-    globalConfig.webhook.timeoutSeconds * 1000 - 1000
+    57000
   )
 
   const agentResults: AgentResult[] = [

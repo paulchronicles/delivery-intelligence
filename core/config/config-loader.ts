@@ -3,7 +3,7 @@ import path from 'path'
 import yaml from 'js-yaml'
 import { TeamConfig, AgentConfig } from '../types'
 
-const CONFIG_DIR = path.join(process.cwd(), 'config')
+const CONFIG_DIR = path.join(__dirname, '..', '..', 'config')
 
 // ─── Team Config ────────────────────────────────────────────
 
@@ -22,7 +22,25 @@ export function getTeamConfig(teamKey: string): TeamConfig {
   }
 
   const raw = fs.readFileSync(filePath, 'utf8')
-  const config = yaml.load(raw) as TeamConfig
+  const r: any = yaml.load(raw)
+  const config: TeamConfig = {
+    team: r.team,
+    projectKey: r.project_key ?? r.projectKey,
+    qaLead: r.qa_lead ?? r.qaLead ?? '',
+    slackChannel: r.slack_channel ?? r.slackChannel ?? '#qa-general',
+    targetTransitionState: r.target_transition_state ?? r.targetTransitionState ?? 'Ready for Review',
+    definitionOfDone: {
+      acceptanceCriteriaMinimum: r.definition_of_done?.acceptance_criteria_minimum ?? r.definitionOfDone?.acceptanceCriteriaMinimum ?? 2,
+      designsRequired: r.definition_of_done?.designs_required ?? r.definitionOfDone?.designsRequired ?? false,
+      nonFunctionalRequired: r.definition_of_done?.non_functional_required ?? r.definitionOfDone?.nonFunctionalRequired ?? false,
+    },
+    complianceTriggers: (r.compliance_triggers ?? r.complianceTriggers ?? []).map((t: any) => ({
+      keyword: t.keyword,
+      requirement: t.requirement,
+      severity: t.severity,
+    })),
+    severityOverrides: r.severity_overrides ?? r.severityOverrides ?? {},
+  }
   teamConfigCache.set(teamKey, config)
   return config
 }
@@ -53,14 +71,36 @@ export function getAgentConfig(agentName: string): AgentConfig {
     return agentConfigCache.get(agentName)!
   }
 
-  const filePath = path.join(CONFIG_DIR, 'agents', `${agentName}.yaml`)
+  const agentsDir = path.join(__dirname, '..', '..', 'agents')
+  const agentFolders = fs.existsSync(agentsDir) ? fs.readdirSync(agentsDir) : []
+  let filePath = ''
 
-  if (!fs.existsSync(filePath)) {
+  for (const folder of agentFolders) {
+    const candidate = path.join(agentsDir, folder, 'config', `${agentName}.yaml`)
+    if (fs.existsSync(candidate)) { filePath = candidate; break }
+  }
+
+  if (!filePath) {
+    const legacy = path.join(CONFIG_DIR, 'agents', `${agentName}.yaml`)
+    if (fs.existsSync(legacy)) filePath = legacy
+  }
+
+  if (!filePath) {
     throw new Error(`Agent config not found: ${agentName}`)
   }
 
   const raw = fs.readFileSync(filePath, 'utf8')
-  const config = yaml.load(raw) as AgentConfig
+  const raw_config: any = yaml.load(raw)
+  // Map snake_case YAML keys to camelCase TypeScript
+  const config: AgentConfig = {
+    agent: raw_config.agent,
+    version: raw_config.version,
+    enabled: raw_config.enabled ?? true,
+    systemPrompt: raw_config.system_prompt ?? raw_config.systemPrompt ?? '',
+    vagueTerms: raw_config.vague_terms ?? raw_config.vagueTerms,
+    scoringWeights: raw_config.scoring_weights ?? raw_config.scoringWeights,
+    concernTemplates: raw_config.concern_templates ?? raw_config.concernTemplates,
+  }
   agentConfigCache.set(agentName, config)
   return config
 }

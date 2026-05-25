@@ -20,8 +20,6 @@ export abstract class BaseAgent {
     this.agentName = agentName
   }
 
-  // ─── Main entry point ────────────────────────────────────
-
   public async analyse(ticket: NormalisedTicket): Promise<AgentResult> {
     const startTime = Date.now()
     const config = getAgentConfig(this.agentName)
@@ -34,7 +32,7 @@ export abstract class BaseAgent {
       const userPrompt = this.buildUserPrompt(ticket)
       const raw = await this.callLLM(config.systemPrompt, userPrompt)
       const parsed = this.parseResponse(raw)
-      const concerns = this.processConcerns(parsed.concerns ?? [], ticket)
+      const concerns = this.processConcerns(parsed.concerns ?? parsed.detectedAreas ? (parsed.concerns ?? []) : [], ticket)
       const verdict = this.deriveVerdict(concerns)
 
       return {
@@ -47,13 +45,11 @@ export abstract class BaseAgent {
         score: parsed.score ?? this.calculateScore(concerns),
         durationMs: Date.now() - startTime,
       }
-    } catch (err) {
-      console.error(`[${this.agentName}] Analysis failed for ${ticket.id}:`, err)
+    } catch (err: any) {
+      console.error(`[${this.agentName}] Analysis failed for ${ticket.id}:`, err?.message)
       return this.buildErrorResult(ticket.id, Date.now() - startTime)
     }
   }
-
-  // ─── LLM Call ────────────────────────────────────────────
 
   private async callLLM(systemPrompt: string, userPrompt: string): Promise<string> {
     const response = await client.messages.create({
@@ -61,15 +57,16 @@ export abstract class BaseAgent {
       max_tokens: globalConfig.anthropic.maxTokens,
       temperature: globalConfig.anthropic.temperature,
       system: systemPrompt,
-      messages: [{ role: 'user', content: userPrompt }],
+      messages: [
+        { role: 'user', content: userPrompt },
+        { role: 'assistant', content: '{' },
+      ],
     })
 
     const block = response.content[0]
     if (block.type !== 'text') throw new Error('Unexpected response type from LLM')
     return block.text
   }
-
-  // ─── User prompt — subclasses can override ───────────────
 
   protected buildUserPrompt(ticket: NormalisedTicket): string {
     return `
@@ -98,20 +95,25 @@ HAS DESIGNS: ${ticket.hasDesigns ? 'Yes' : 'No'}
     `.trim()
   }
 
-  // ─── Response parsing ────────────────────────────────────
-
   private parseResponse(raw: string): any {
-    // Strip markdown fences if model adds them despite instructions
-    const clean = raw.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim()
-    return JSON.parse(clean)
+    // Prepend { because we used assistant prefill
+    const full = '{'  + raw
+    // Extract from first { to last }
+    const start = full.indexOf('{')
+    const end = full.lastIndexOf('}')
+    if (start === -1 || end === -1 || end <= start) {
+      return { summary: 'Could not parse response', score: 50, concerns: [] }
+    }
+    const clean = full.slice(start, end + 1)
+    try {
+      return JSON.parse(clean)
+    } catch {
+      return { summary: 'Could not parse response', score: 50, concerns: [] }
+    }
   }
 
-  // ─── Concern post-processing ─────────────────────────────
-
-  private processConcerns(
-    raw: Partial<AgentConcern>[],
-    ticket: NormalisedTicket
-  ): AgentConcern[] {
+  private processConcerns(raw: Partial<AgentConcern>[], ticket: NormalisedTicket): AgentConcern[] {
+    if (!Array.isArray(raw)) return []
     return raw.map((c, i) => ({
       id: c.id ?? `${this.agentName.toUpperCase()}-${String(i + 1).padStart(3, '0')}`,
       severity: c.severity ?? 'MAJOR',
@@ -122,85 +124,43 @@ HAS DESIGNS: ${ticket.hasDesigns ? 'Yes' : 'No'}
       suggestion: c.suggestion ?? '',
       example: c.example,
       confidence: c.confidence ?? 0.8,
-    })).filter(c => {
-      // Downgrade low-confidence concerns rather than blocking
+    })).map(c => {
       if (c.confidence < globalConfig.verdictRules.confidenceFloor) {
         c.severity = this.downgradeSeverity(c.severity)
       }
-      return true
+      return c
     })
   }
 
-  // ─── Verdict derivation ──────────────────────────────────
-
   private deriveVerdict(concerns: AgentConcern[]): AgentVerdict {
     const severities = concerns.map(c => c.severity)
-
-    if (severities.some(s => globalConfig.verdictRules.hardBlockOn.includes(s))) {
-      return 'BLOCK'
-    }
-    if (severities.some(s => globalConfig.verdictRules.softBlockOn.includes(s))) {
-      return 'WARN'
-    }
+    if (severities.some(s => globalConfig.verdictRules.hardBlockOn.includes(s as Severity))) return 'BLOCK'
+    if (severities.some(s => globalConfig.verdictRules.softBlockOn.includes(s as Severity))) return 'WARN'
     if (concerns.length === 0) return 'PASS'
     return 'WARN'
   }
 
-  // ─── Score calculation fallback ──────────────────────────
-
   private calculateScore(concerns: AgentConcern[]): number {
-    const deductions: Record<Severity, number> = {
-      BLOCKER: 40,
-      CRITICAL: 20,
-      MAJOR: 10,
-      MINOR: 3,
-    }
-    const total = concerns.reduce((acc, c) => acc + (deductions[c.severity] ?? 0), 0)
+    const deductions: Record<Severity, number> = { BLOCKER: 40, CRITICAL: 20, MAJOR: 10, MINOR: 3 }
+    const total = concerns.reduce((acc, c) => acc + (deductions[c.severity as Severity] ?? 0), 0)
     return Math.max(0, 100 - total)
   }
 
-  // ─── Severity helpers ────────────────────────────────────
-
-  private downgradeSeverity(severity: Severity): Severity {
+  private downgradeSeverity(severity: string): Severity {
     const order: Severity[] = ['BLOCKER', 'CRITICAL', 'MAJOR', 'MINOR']
-    const idx = order.indexOf(severity)
-    return idx < order.length - 1 ? order[idx + 1] : severity
+    const idx = order.indexOf(severity as Severity)
+    return idx < order.length - 1 ? order[idx + 1] : severity as Severity
   }
 
-  // ─── Fallback results ────────────────────────────────────
-
   private buildSkippedResult(ticketId: string): AgentResult {
-    return {
-      agent: this.agentName,
-      ticketId,
-      analysedAt: new Date().toISOString(),
-      verdict: 'PASS',
-      concerns: [],
-      summary: 'Agent disabled — skipped.',
-      score: 100,
-      durationMs: 0,
-    }
+    return { agent: this.agentName, ticketId, analysedAt: new Date().toISOString(), verdict: 'PASS', concerns: [], summary: 'Agent disabled.', score: 100, durationMs: 0 }
   }
 
   private buildErrorResult(ticketId: string, durationMs: number): AgentResult {
     return {
-      agent: this.agentName,
-      ticketId,
-      analysedAt: new Date().toISOString(),
-      verdict: 'WARN',
-      concerns: [{
-        id: `${this.agentName.toUpperCase()}-ERR`,
-        severity: 'MAJOR',
-        agent: this.agentName,
-        location: 'System',
-        finding: `${this.agentName} agent encountered an error during analysis`,
-        whyItMatters: 'This dimension could not be reviewed — human review recommended',
-        suggestion: 'Check agent logs and retry',
-        confidence: 1.0,
-      }],
-      summary: 'Agent error — could not complete analysis.',
-      score: 50,
-      durationMs,
+      agent: this.agentName, ticketId, analysedAt: new Date().toISOString(), verdict: 'WARN',
+      concerns: [{ id: `${this.agentName.toUpperCase()}-ERR`, severity: 'MAJOR', agent: this.agentName, location: 'System', finding: `${this.agentName} agent encountered an error`, whyItMatters: 'This dimension could not be reviewed', suggestion: 'Check agent logs and retry', confidence: 1.0 }],
+      summary: 'Agent error — could not complete analysis.', score: 50, durationMs,
     }
   }
 }

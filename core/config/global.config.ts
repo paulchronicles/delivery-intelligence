@@ -14,6 +14,6 @@ export const globalConfig: GlobalConfig = {
   },
   webhook: {
     timeoutBehaviour: 'block',  // if agent times out, be safe and block
-    timeoutSeconds: 9,
+    timeoutSeconds: 60,
   },
 }
