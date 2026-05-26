@@ -78,3 +78,12 @@ journeys:
     description: "Reporting, statements and transaction history views"
 
 severity_overrides: {}
+
+test_repo:
+  github_owner: paulchronicles
+  github_repo: nomo-test-automation
+  branch: main
+  spec_patterns:
+    - "**/*.spec.ts"
+    - "**/*.test.ts"
+    - "**/*.feature"
