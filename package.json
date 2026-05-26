@@ -8,7 +8,7 @@
     "start": "node dist/mcp-server.js",
     "dev": "ts-node-dev --respawn src/mcp-server.ts",
     "test": "jest --coverage",
-    "postbuild": "cp -r agents/requirement-gap/config dist/agents/requirement-gap/config && cp -r agents/test-case-generation/config dist/agents/test-case-generation/config && cp -r config dist/config"
+    "postbuild": "cp -r agents/requirement-gap/config dist/agents/requirement-gap/config && cp -r agents/test-case-generation/config dist/agents/test-case-generation/config && cp -r agents/regression-impact-map/config dist/agents/regression-impact-map/config && cp -r config dist/config"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.24.0",

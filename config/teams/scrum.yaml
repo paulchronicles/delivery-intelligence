@@ -1,35 +1,80 @@
 team: SCRUM
 project_key: SCRUM
-qa_lead: olupaul485@gmail.com
-slack_channel: "#qa-general"
-target_transition_state: "In Review"
+qa_lead: paul@nomo.com
+slack_channel: "#qa-payments"
+target_transition_state: "Ready for Review"
 
 definition_of_done:
   acceptance_criteria_minimum: 3
-  designs_required: false
-  non_functional_required: false
+  designs_required: true
+  non_functional_required: true
 
 compliance_triggers:
   - keyword: "card"
-    requirement: "Must include PCI DSS data handling AC"
+    requirement: "Must include PCI DSS tokenisation AC — never store raw card numbers"
     severity: BLOCKER
-  - keyword: "card details"
-    requirement: "Must specify tokenisation — never store raw card numbers"
+  - keyword: "payment"
+    requirement: "Must include PCI DSS scope confirmation and audit logging AC"
+    severity: CRITICAL
+  - keyword: "personal data"
+    requirement: "Must include GDPR lawful basis and retention period"
     severity: BLOCKER
+  - keyword: "password"
+    requirement: "Must include secure storage AC (bcrypt/scrypt/argon2)"
+    severity: CRITICAL
   - keyword: "bank account"
     requirement: "Must include encryption and audit logging AC"
     severity: BLOCKER
-  - keyword: "payment"
-    requirement: "Must include PCI DSS scope confirmation"
-    severity: CRITICAL
-  - keyword: "password"
-    requirement: "Must include secure storage AC"
-    severity: CRITICAL
-  - keyword: "personal data"
-    requirement: "Must include GDPR data handling AC"
-    severity: BLOCKER
-  - keyword: "user data"
-    requirement: "Must include data retention and deletion AC"
-    severity: CRITICAL
+
+journeys:
+  - name: "Guest checkout"
+    keywords: [checkout, basket, order, payment, purchase, buy]
+    risk: critical
+    description: "End-to-end purchase flow for unauthenticated users"
+
+  - name: "Saved card checkout"
+    keywords: [saved card, card storage, stored card, card details, tokenisation]
+    risk: critical
+    description: "Checkout using a previously saved payment method"
+
+  - name: "Payment failure recovery"
+    keywords: [payment retry, retry, payment failure, declined, failed payment]
+    risk: critical
+    description: "Recovery flow when a payment fails or is declined"
+
+  - name: "Duplicate payment prevention"
+    keywords: [duplicate, double charge, idempotency, retry, resubmit]
+    risk: critical
+    description: "Prevention of duplicate charges on retry or resubmit"
+
+  - name: "User authentication"
+    keywords: [login, logout, session, auth, password, credentials, 2fa, mfa]
+    risk: high
+    description: "Login, logout, session management and MFA flows"
+
+  - name: "User onboarding"
+    keywords: [registration, signup, sign up, kyc, identity, onboard, account creation]
+    risk: high
+    description: "New user registration and KYC verification"
+
+  - name: "Account management"
+    keywords: [profile, account, settings, preferences, personal details, address]
+    risk: medium
+    description: "User profile and account settings management"
+
+  - name: "Refunds and disputes"
+    keywords: [refund, dispute, chargeback, reversal, cancel, cancellation]
+    risk: critical
+    description: "Refund processing and dispute handling flows"
+
+  - name: "Notifications"
+    keywords: [email, sms, push notification, notification, alert, reminder]
+    risk: low
+    description: "Email, SMS and push notification delivery"
+
+  - name: "Reporting and analytics"
+    keywords: [report, analytics, dashboard, export, statement, transaction history]
+    risk: medium
+    description: "Reporting, statements and transaction history views"
 
 severity_overrides: {}

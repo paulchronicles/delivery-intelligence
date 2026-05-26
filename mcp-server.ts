@@ -12,6 +12,9 @@ registerAgent(requirementGapAgent)
 import { testCaseGenerationAgent } from './agents/test-case-generation/index'
 registerAgent(testCaseGenerationAgent)
 
+import { regressionImpactMapAgent } from './agents/regression-impact-map/index'
+registerAgent(regressionImpactMapAgent)
+
 // ─── Start server ─────────────────────────────────────────────
 
 async function main() {
