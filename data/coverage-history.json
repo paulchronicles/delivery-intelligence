@@ -1,0 +1,36 @@
+[
+  {
+    "generatedAt": "2026-05-26T20:20:11.894Z",
+    "team": "SCRUM",
+    "gaps": [
+      "POST /api/payments/retry",
+      "POST /api/auth/login",
+      "GET /api/user/profile",
+      "GET /api/notifications",
+      "GET /api/user/saved-cards",
+      "POST /api/payments/initiate",
+      "POST /api/checkout/complete",
+      "GET /api/transactions/history",
+      "POST /api/cards/add",
+      "POST /api/user/register"
+    ],
+    "confidence": 0
+  },
+  {
+    "generatedAt": "2026-05-26T20:26:41.431Z",
+    "team": "SCRUM",
+    "gaps": [
+      "POST /api/payments/retry",
+      "POST /api/auth/login",
+      "GET /api/user/profile",
+      "GET /api/notifications",
+      "GET /api/user/saved-cards",
+      "POST /api/payments/initiate",
+      "POST /api/checkout/complete",
+      "GET /api/transactions/history",
+      "POST /api/cards/add",
+      "POST /api/user/register"
+    ],
+    "confidence": 0
+  }
+]

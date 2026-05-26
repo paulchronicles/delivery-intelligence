@@ -15,6 +15,12 @@ registerAgent(testCaseGenerationAgent)
 import { regressionImpactMapAgent } from './agents/regression-impact-map/index'
 registerAgent(regressionImpactMapAgent)
 
+import { productionCoverageIntelligenceAgent } from './agents/production-coverage-intelligence/index'
+registerAgent(productionCoverageIntelligenceAgent)
+
+import { releaseReadinessAgent } from './agents/release-readiness/index'
+registerAgent(releaseReadinessAgent)
+
 // ─── Start server ─────────────────────────────────────────────
 
 async function main() {
