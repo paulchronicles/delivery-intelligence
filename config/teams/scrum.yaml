@@ -81,7 +81,7 @@ severity_overrides: {}
 
 test_repo:
   github_owner: paulchronicles
-  github_repo: nomo-test-automation
+  github_repo: ever-ai
   branch: main
   spec_patterns:
     - "**/*.spec.ts"

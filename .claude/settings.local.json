@@ -1,0 +1,7 @@
+{
+  "permissions": {
+    "allow": [
+      "mcp__delivery-intelligence__get_team_config"
+    ]
+  }
+}

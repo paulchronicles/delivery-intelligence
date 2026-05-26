@@ -159,7 +159,8 @@ export const requirementGapAgent: DeliveryAgent = {
         try {
           const { getTeamConfig } = await import('../../core/config/config-loader')
           const config = getTeamConfig(teamKey)
-          const output = [
+          const testRepo = (config as any).test_repo ?? (config as any).testRepo
+        const output = [
             `**QA Rules for ${teamKey}**`,
             `QA Lead: ${config.qaLead}`,
             `Slack: ${config.slackChannel}`,
@@ -168,6 +169,10 @@ export const requirementGapAgent: DeliveryAgent = {
             ``,
             `**Compliance Triggers**`,
             ...config.complianceTriggers.map((t: any) => `• "${t.keyword}" → ${t.requirement} (${t.severity})`),
+            ``,
+            testRepo
+              ? `**Test Repository**\ngithub: ${testRepo.github_owner}/${testRepo.github_repo} (${testRepo.branch})\nPatterns: ${(testRepo.spec_patterns ?? []).join(', ')}`
+              : `**Test Repository**\nNot configured — add test_repo to team config to enable coverage scanning`,
           ].join('\n')
           return { content: [{ type: 'text', text: output }] }
         } catch (err: any) {

@@ -41,8 +41,10 @@ export function getTeamConfig(teamKey: string): TeamConfig {
     })),
     severityOverrides: r.severity_overrides ?? r.severityOverrides ?? {},
   }
-  teamConfigCache.set(teamKey, config)
-  return config
+  // Merge raw yaml fields so unknown fields like test_repo are preserved
+  const merged = { ...r, ...config }
+  teamConfigCache.set(teamKey, merged)
+  return merged
 }
 
 function getDefaultTeamConfig(teamKey: string): TeamConfig {
