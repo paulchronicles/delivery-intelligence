@@ -87,3 +87,56 @@ test_repo:
     - "**/*.spec.ts"
     - "**/*.test.ts"
     - "**/*.feature"
+
+components:
+  - name: authentication
+    keywords: [login, logout, session, password, locked out, token, mfa, 2fa, credentials, sign in]
+    owner: platform-team
+    risk: critical
+
+  - name: payment-processing
+    keywords: [payment, charge, transaction, billing, retry, duplicate charge, double payment, idempotency]
+    owner: payments-team
+    risk: critical
+
+  - name: card-storage
+    keywords: [saved card, stored card, card details, tokenisation, card vault, saved payment]
+    owner: payments-team
+    risk: critical
+
+  - name: checkout
+    keywords: [checkout, basket, order, purchase, buy, cart]
+    owner: frontend-team
+    risk: high
+
+  - name: notifications
+    keywords: [email, sms, push, notification, alert, not received, delivery failed]
+    owner: comms-team
+    risk: medium
+
+  - name: user-profile
+    keywords: [profile, account, settings, preferences, personal details, address]
+    owner: frontend-team
+    risk: low
+
+severity_rules:
+  p1:
+    - payment processing broken or producing incorrect charges
+    - authentication completely broken
+    - data loss or corruption
+    - security vulnerability exposed
+    - production system down
+    - personal data exposed
+  p2:
+    - major feature broken for all users
+    - performance severely degraded
+    - data displaying incorrectly
+    - critical user journey cannot be completed
+  p3:
+    - feature partially broken with workaround
+    - affects subset of users
+    - non-critical functionality impaired
+  p4:
+    - cosmetic or minor UX issue
+    - no functional impact
+    - low traffic feature

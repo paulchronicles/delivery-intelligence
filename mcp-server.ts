@@ -21,6 +21,9 @@ registerAgent(productionCoverageIntelligenceAgent)
 import { releaseReadinessAgent } from './agents/release-readiness/index'
 registerAgent(releaseReadinessAgent)
 
+import { defectTriageAgent } from './agents/defect-triage/index'
+registerAgent(defectTriageAgent)
+
 // ─── Start server ─────────────────────────────────────────────
 
 async function main() {
